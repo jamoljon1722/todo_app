@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8" />
+    <title>Todo Yaratish</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f9f9f9;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+        
+        header {
+            background: #2c3e50;
+            color: white;
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+        }
+        
+        #fullName {
+            font-size: 18px;
+        }
+        
+        main {
+            flex: 1;
+            padding: 40px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        form {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            width: 400px;
+        }
+        
+        form h2 {
+            margin-top: 0;
+            margin-bottom: 20px;
+            color: #2c3e50;
+            text-align: center;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #34495e;
+        }
+        
+        input[type="text"],
+        textarea {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 20px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 14px;
+            resize: vertical;
+        }
+        
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 5px;
+            width: 100%;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        
+        button:hover {
+            background-color: #2980b9;
+        }
+        
+        #backBtn {
+            margin-top: 15px;
+            background-color: #7f8c8d;
+        }
+        
+        #backBtn:hover {
+            background-color: #636e72;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="logo">Todo App</div>
+        <div id="fullName">Foydalanuvchi</div>
+    </header>
+    
+    <main>
+        <form id="todoForm">
+            <h2>Yangi Todo yaratish</h2>
+            
+            <label for="todoName">Todo nomi</label>
+            <input type="text" id="todoName" name="todoName" required />
+            
+            <label for="description">Tavsif</label>
+            <textarea id="description" name="description" rows="4" required></textarea>
+            
+            <button type="submit">Yaratish</button>
+            <button type="button" id="backBtn">Orqaga</button>
+        </form>
+
+        <div id="checkResult">Tekshirilmoqda...</div>
+    </main>
+    
+    <script>
+
+            const fullName = localStorage.getItem("fullName");
+            if (fullName) {
+                document.getElementById("fullName").textContent = fullName;
+            }
+            
+            const todoForm = document.getElementById('todoForm');
+            todoForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                const todoName = document.getElementById('todoName').value.trim();
+                const description = document.getElementById('description').value.trim();
+                
+                if (!todoName || !description) {
+                    alert('Iltimos, barcha maydonlarni to\'ldiring!');
+                    return;
+                }
+                
+                try {
+                    const response = await fetch('http://192.168.100.74:9090/todo/new', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        credentials: 'include', 
+                        body: JSON.stringify({ todoName, description })
+                    });
+                    
+                    if (response.ok) {
+                        alert('Todo muvaffaqiyatli yaratildi!');
+                        window.location.href = 'home.html';
+                    } else {
+                        alert('Todo yaratishda xatolik yuz berdi.');
+                    }
+                } catch (error) {
+                    alert('Server bilan bog‘lanishda muammo yuz berdi.');
+                    console.error(error);
+                }
+            });
+            
+            document.getElementById('backBtn').addEventListener('click', () => {
+                window.location.href = 'home.html';
+            });
+
+            window.addEventListener("DOMContentLoaded", async () => {
+        try {
+            // const response = await fetch("http://192.168.100.74:9090/todo/check", {
+            //     method: "GET",
+            //     credentials: "include"
+            // });
+
+            if (response.ok) {
+                const data = await response.text();
+                console.log("Check muvaffaqiyatli:", data);
+                document.getElementById("checkResult").textContent = "Foydalanuvchi: " + data;
+            } else if (response.status === 401) {
+                document.getElementById("checkResult").textContent = "Siz tizimga kirmagansiz.";
+            } else {
+                document.getElementById("checkResult").textContent = "Noma’lum xatolik yuz berdi.";
+            }
+        } catch (error) {
+            console.error("Server bilan bog‘lanishda muammo:", error);
+            document.getElementById("checkResult").textContent = "Serverga ulanib bo‘lmadi.";
+        }
+    });
+    </script>
+</body>
+</html>

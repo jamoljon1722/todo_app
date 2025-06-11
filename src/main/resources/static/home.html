@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8" />
+    <title>Bosh sahifa</title>
+    <link rel="stylesheet" href="home.css" />
+    <style>
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f2f2f2;
+        }
+        header {
+            background: #2c3e50;
+            color: white;
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+        }
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+        #fullName {
+            font-size: 18px;
+        }
+        #createTodoBtn {
+            background: #3498db;
+            border: none;
+            padding: 10px 15px;
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        #createTodoBtn:hover {
+            background: #2980b9;
+        }
+        #logoutBtn {
+            background: #e74c3c;
+            border: none;
+            padding: 10px 15px;
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        #logoutBtn:hover {
+            background: #c0392b;
+        }
+        main {
+            padding: 40px;
+            text-align: center;
+            font-size: 22px;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="logo">Todo App</div>
+        <div class="user-info">
+            <span id="fullName">Foydalanuvchi</span>
+            <button id="createTodoBtn">+ Create Todo</button>
+            <button id="logoutBtn">Logout</button>
+        </div>
+    </header>
+
+    <main>
+        <h2>Xush kelibsiz!</h2>
+    </main>
+
+    <script>
+
+//         fetch('http://192.168.100.74:9090/user/test-auth', {
+//     method: 'GET',
+//     credentials: 'include'
+// }).then(res => res.text()).then(data => console.log(data));
+ 
+        const fullName = localStorage.getItem("fullName");
+        if (!fullName) {
+            window.location.href = "login.html"; // Login sahifasi nomi
+        } else {
+            document.getElementById("fullName").textContent = fullName;
+        }
+
+        document.getElementById("createTodoBtn").addEventListener("click", () => {
+            window.location.href = "create-todo.html";
+        });
+
+        document.getElementById("logoutBtn").addEventListener("click", () => {
+            if(confirm("Chiqishni xohlaysizmi?")) {
+                localStorage.removeItem("fullName"); 
+                window.location.href = "login.html"; 
+            }
+        });
+
+
+        const todoListContainer = document.createElement('div');
+        todoListContainer.style.marginTop = '30px';
+        todoListContainer.style.textAlign = 'left';
+        document.querySelector('main').appendChild(todoListContainer);
+
+        // Backenddan todos olish
+        async function fetchTodos() {
+            try {
+                const response = await fetch('http://192.168.100.74:9090/todo/all');
+                if (response.ok) {
+                    const todos = await response.json();
+                    renderTodos(todos);
+                } else {
+                    todoListContainer.innerHTML = '<p>Todo’larni yuklashda xatolik yuz berdi.</p>';
+                }
+            } catch (error) {
+                todoListContainer.innerHTML = '<p>Server bilan bog‘lanishda muammo.</p>';
+                console.error(error);
+            }
+        }
+
+        function renderTodos(todos) {
+            if (!todos.length) {
+                todoListContainer.innerHTML = '<p>Hech qanday todo yo‘q.</p>';
+                return;
+            }
+
+            todoListContainer.innerHTML = '';
+            todos.forEach(todo => {
+                const todoDiv = document.createElement('div');
+                todoDiv.style.background = '#fff';
+                todoDiv.style.padding = '15px';
+                todoDiv.style.marginBottom = '10px';
+                todoDiv.style.borderRadius = '6px';
+                todoDiv.style.boxShadow = '0 2px 5px rgba(0,0,0,0.1)';
+
+                const name = document.createElement('h3');
+                name.textContent = todo.todoName;
+                todoDiv.appendChild(name);
+
+                const desc = document.createElement('p');
+                desc.textContent = todo.description;
+                todoDiv.appendChild(desc);
+
+                const editBtn = document.createElement('button');
+                editBtn.textContent = 'O‘zgartirish';
+                editBtn.style.marginRight = '10px';
+                editBtn.style.backgroundColor = '#f39c12';
+                editBtn.style.color = '#fff';
+                editBtn.style.border = 'none';
+                editBtn.style.padding = '5px 10px';
+                editBtn.style.borderRadius = '4px';
+                editBtn.style.cursor = 'pointer';
+
+                editBtn.onclick = () => {
+                    const newName = prompt('Yangi todo nomini kiriting:', todo.todoName);
+                    const newDesc = prompt('Yangi tavsif kiriting:', todo.description);
+
+                    if (newName && newDesc) {
+                        updateTodo(todo.id, newName, newDesc);
+                    }
+                };
+
+                const deleteBtn = document.createElement('button');
+                deleteBtn.textContent = 'O‘chirish';
+                deleteBtn.style.backgroundColor = '#e74c3c';
+                deleteBtn.style.color = '#fff';
+                deleteBtn.style.border = 'none';
+                deleteBtn.style.padding = '5px 10px';
+                deleteBtn.style.borderRadius = '4px';
+                deleteBtn.style.cursor = 'pointer';
+
+                deleteBtn.onclick = () => {
+                    if (confirm('Ishonchingiz komilmi?')) {
+                        deleteTodo(todo.id);
+                    }
+                };
+
+                todoDiv.appendChild(editBtn);
+                todoDiv.appendChild(deleteBtn);
+
+                todoListContainer.appendChild(todoDiv);
+            });
+        }
+
+
+        async function updateTodo(id, todoName, description) {
+            try {
+                const response = await fetch(`http://192.168.100.74:9090/todo/update/${id}`, {
+                    method: 'PUT',
+                    headers: {'Content-Type': 'application/json'},
+                    credentials: 'include',
+                    body: JSON.stringify({ todoName, description })
+                });
+                if (response.ok) {
+                    alert('Todo o‘zgartirildi');
+                    fetchTodos();
+                } else {
+                    alert('Todo o‘zgartirishda xatolik');
+                }
+            } catch (err) {
+                alert('Server bilan bog‘lanishda muammo');
+                console.error(err);
+            }
+        }
+
+
+        async function deleteTodo(id) {
+            try {
+                const response = await fetch(`http://192.168.100.74:9090/todo/del/${id}`, {
+                    method: 'DELETE',
+                    credentials: 'include',
+                });
+                if (response.ok) {
+                    alert('Todo o‘chirildi');
+                    fetchTodos();
+                } else {
+                    alert('Todo o‘chirishda xatolik');
+                }
+            } catch (err) {
+                alert('Server bilan bog‘lanishda muammo');
+                console.error(err);
+            }
+        }
+
+
+        fetchTodos();
+
+        console.log(document.cookie);
+    </script>
+</body>
+</html>
