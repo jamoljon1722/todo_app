@@ -22,8 +22,8 @@ public class SecurityConfig {
         DefaultCookieSerializer cookieSerializer = new DefaultCookieSerializer();
         cookieSerializer.setCookiePath("/");
         cookieSerializer.setCookieMaxAge(3600);
-        cookieSerializer.setSameSite("None"); // Hali ham saqlab qoldik, lekin cross-site bo‘lmasa kerak emas
-        cookieSerializer.setUseSecureCookie(false); // HTTPS bo‘lmasa
+        cookieSerializer.setSameSite("None"); 
+        cookieSerializer.setUseSecureCookie(false); 
         cookieSerializer.setUseHttpOnlyCookie(true);
         resolver.setCookieSerializer(cookieSerializer);
         return resolver;
@@ -32,15 +32,15 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-            .csrf(csrf -> csrf.disable()) // CSRF o‘chirilgan
+            .csrf(csrf -> csrf.disable()) // CSRF
             .sessionManagement(session -> session
-                .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED) // Sessiya kerak bo‘lganda yaratiladi
+                .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED) 
             )
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/user/**").permitAll() // /user/** uchun autentifikatsiya kerak emas
-                .requestMatchers("/**").permitAll() // Barcha static resurslar (HTML, CSS, JS) uchun ruxsat
-                .requestMatchers("/todo/**").authenticated() // /todo/** uchun autentifikatsiya kerak
-                .anyRequest().authenticated() // Qolganlari uchun autentifikatsiya
+                .requestMatchers("/user/**").permitAll() /
+                .requestMatchers("/**").permitAll() 
+                .requestMatchers("/todo/**").authenticated() 
+                .anyRequest().authenticated() 
             );
         return http.build();
     }
